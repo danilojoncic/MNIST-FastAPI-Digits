@@ -1,5 +1,3 @@
-from msilib.schema import File
-
 from fastapi import FastAPI
 
 app = FastAPI()
