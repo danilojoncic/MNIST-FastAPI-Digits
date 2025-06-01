@@ -430,3 +430,54 @@ class Activation_Softmax_Loss_CategoricalCrossentropy():
         self.dinputs[range(samples), y_true] -= 1
         # Normalize gradient
         self.dinputs = self.dinputs / samples
+
+
+class Model:
+
+    def __init__(self):
+        self.layers = []
+
+    def add(self, layer):
+        self.layers.append(layer)
+
+    def forward(self, X):
+        # Forward pass through all layers
+        for layer in self.layers:
+            layer.forward(X)
+            X = layer.output
+        return X
+
+    def backward(self, dvalues):
+        # Backward pass through all layers (in reverse)
+        for layer in reversed(self.layers):
+            layer.backward(dvalues)
+            dvalues = layer.dinputs
+
+    def save_parameters(self, path):
+        # Save weights and biases of all layers into a file
+        parameters = []
+        for layer in self.layers:
+            # Only save layers that have weights and biases (like Dense)
+            if hasattr(layer, 'weights') and hasattr(layer, 'biases'):
+                params = {
+                    'weights': layer.weights,
+                    'biases': layer.biases
+                }
+                parameters.append(params)
+            else:
+                parameters.append(None)  # For layers without params
+        with open(path, 'wb') as f:
+            pickle.dump(parameters, f)
+        print(f'Model parameters saved to {path}')
+
+    def load_parameters(self, path):
+        # Load weights and biases for all layers from file
+        with open(path, 'rb') as f:
+            parameters = pickle.load(f)
+        for layer, params in zip(self.layers, parameters):
+            if params is not None:
+                layer.weights = params['weights']
+                layer.biases = params['biases']
+        print(f'Model parameters loaded from {path}')
+
+
