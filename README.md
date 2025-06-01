@@ -54,7 +54,7 @@ The neural network consists of:
    ```
 
 3. **Access the application**
-   - Open your browser to `http://localhost:8000/paint-screen`
+   - Open your browser to `http://localhost:8080/paint-screen`
    - Draw a digit and click "Predict" to see the neural network's prediction
 
 ### Manual Setup
