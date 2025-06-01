@@ -1,5 +1,8 @@
 # Neural Networks From Scratch
 
+![image](https://github.com/user-attachments/assets/feb5c442-08ef-4257-85da-2a4e97c2b8cb)
+
+
 A complete implementation of neural networks using only NumPy, featuring a web-based digit recognition interface powered by FastAPI.
 
 ## 🧠 Overview
