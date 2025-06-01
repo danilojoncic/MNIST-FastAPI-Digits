@@ -50,36 +50,80 @@
       font-size: 18px;
       color: #333;
     }
+
+    .preview-container {
+      margin: 15px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .preview-canvas {
+      border: 1px solid #ccc;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Draw a Digit (28×28)</h2>
     <canvas id="canvas" width="280" height="280"></canvas><br>
+
+    <div class="preview-container">
+      <div>
+        <p>28x28 Preview:</p>
+        <canvas id="preview" class="preview-canvas" width="56" height="56"></canvas>
+      </div>
+    </div>
+
     <button onclick="clearCanvas()">Clear</button>
     <button onclick="sendImage()">Predict</button>
+    <button onclick="downloadCanvas()">Download Image</button>
+    <button onclick="downloadProcessed()">Download 28x28</button>
+
     <p id="result"></p>
   </div>
 
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
+    const preview = document.getElementById("preview");
+    const previewCtx = preview.getContext("2d");
     let drawing = false;
 
-    // Brush settings
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 15;
     ctx.lineCap = "round";
     ctx.strokeStyle = "black";
+    ctx.fillStyle = "white";
 
-    // Mouse events
+    // Fill canvas with white background
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Disable antialiasing for preview
+    previewCtx.imageSmoothingEnabled = false;
+
     canvas.addEventListener("mousedown", (e) => {
       drawing = true;
       ctx.beginPath();
       ctx.moveTo(e.offsetX, e.offsetY);
+      // Draw a dot for single clicks
+      ctx.arc(e.offsetX, e.offsetY, ctx.lineWidth/2, 0, 2 * Math.PI);
+      ctx.fill();
+      updatePreview();
     });
 
-    canvas.addEventListener("mouseup", () => drawing = false);
-    canvas.addEventListener("mouseout", () => drawing = false);
+    canvas.addEventListener("mouseup", () => {
+      drawing = false;
+      updatePreview();
+    });
+
+    canvas.addEventListener("mouseout", () => {
+      drawing = false;
+    });
+
     canvas.addEventListener("mousemove", draw);
 
     function draw(e) {
@@ -87,22 +131,66 @@
       ctx.lineTo(e.offsetX, e.offsetY);
       ctx.stroke();
       ctx.moveTo(e.offsetX, e.offsetY);
+      updatePreview();
+    }
+
+    function updatePreview() {
+      // Create a temporary canvas for processing
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = 28;
+      tempCanvas.height = 28;
+      const tempCtx = tempCanvas.getContext("2d");
+
+      // Disable smoothing for crisp downscaling
+      tempCtx.imageSmoothingEnabled = false;
+
+      // Fill with white background
+      tempCtx.fillStyle = "white";
+      tempCtx.fillRect(0, 0, 28, 28);
+
+      // Draw the main canvas scaled down
+      tempCtx.drawImage(canvas, 0, 0, 28, 28);
+
+      // Draw preview scaled up for visibility
+      previewCtx.clearRect(0, 0, preview.width, preview.height);
+      previewCtx.drawImage(tempCanvas, 0, 0, preview.width, preview.height);
     }
 
     function clearCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.beginPath();
+      previewCtx.clearRect(0, 0, preview.width, preview.height);
+      document.getElementById("result").innerText = "";
     }
 
-    function sendImage() {
+    function createProcessedImage() {
+      // Create 28x28 canvas
       const smallCanvas = document.createElement("canvas");
       smallCanvas.width = 28;
       smallCanvas.height = 28;
       const smallCtx = smallCanvas.getContext("2d");
 
+      // Disable smoothing for better quality
+      smallCtx.imageSmoothingEnabled = false;
+
+      // Fill with white background
+      smallCtx.fillStyle = "white";
+      smallCtx.fillRect(0, 0, 28, 28);
+
+      // Draw the main canvas scaled down
       smallCtx.drawImage(canvas, 0, 0, 28, 28);
 
-      const imageData = smallCanvas.toDataURL("image/png");
+      return smallCanvas;
+    }
+
+    function sendImage() {
+      const processedCanvas = createProcessedImage();
+      const imageData = processedCanvas.toDataURL("image/png");
+
+      console.log("Sending image data:", imageData.substring(0, 100) + "...");
+
 
       fetch("/predict", {
         method: "POST",
@@ -113,9 +201,29 @@
       })
       .then(response => response.json())
       .then(data => {
-        document.getElementById("result").innerText = "Prediction: " + data.prediction;
+        document.getElementById("result").innerText = "Prediction: " + data.prediction.prediction;
+      })
+      .catch(error => {
+        document.getElementById("result").innerText = "Error: " + error.message;
       });
     }
+
+    function downloadCanvas() {
+      const link = document.createElement("a");
+      link.download = "digit_original.png";
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function downloadProcessed() {
+      const processedCanvas = createProcessedImage();
+      const link = document.createElement("a");
+      link.download = "digit_28x28.png";
+      link.href = processedCanvas.toDataURL();
+      link.click();
+    }
+
+    updatePreview();
   </script>
 </body>
 </html>
