@@ -109,9 +109,9 @@ This will:
 ## 📊 Model Performance
 
 The pre-trained model achieves:
-- **Training accuracy**: ~98%
-- **Validation accuracy**: ~96%
-- **Inference time**: <50ms per prediction
+- **Training accuracy**: ~92%
+- **Validation accuracy**: ~90%
+- **Different hyperparameters and model architetcure achive better or worse scores**
 
 ## 🛠️ Technical Details
 
@@ -152,22 +152,17 @@ This returns image statistics and saves the processed image for inspection.
 - MarkupSafe 3.0.2
 - jinja2 3.1.6
 
-See `requirements.txt` for complete dependency list.
+As can be seen in `requirements.txt`
 
 ## 🐳 Docker Configuration
 
 The project includes multi-stage Docker builds for:
-- **Development**: Hot-reload enabled
-- **Production**: Optimized image size and performance
+- **Overall less resource usage compared to basic FROM python... Dockerfile setup
 
 ```yaml
-# Development
 docker-compose up
-
-# Production
-docker-compose -f docker-compose.prod.yml up
 ```
 
 ## 🙏 Acknowledgments
 
-- **Neural Networks from Scratch** books
+- **Neural Networks from Scratch** book
